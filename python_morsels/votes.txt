@@ -1,0 +1,14 @@
+Anne:
+20 13 4
+Brian:
+4 20
+Jayne:
+13 20 30
+Robert:
+20 4
+Betty:
+20 13 30
+Jonathan:
+100 13 4
+Stephen:
+13 4 30
