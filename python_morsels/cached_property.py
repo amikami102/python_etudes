@@ -1,10 +1,9 @@
 # cached_property.py
 """
-A script reimplementing `functools.cache_property`.
+A script re-implementing `functools.cache_property`.
 """
-from rich import print
-
 SENTINEL = object()	# in case the value being cached is None
+
 
 class cached_property:
     """ A decorator that can cache values. """
