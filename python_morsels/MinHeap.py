@@ -11,7 +11,7 @@ T = TypeVar('T')
 class MinHeap:
     """ A heap data structure. """
     
-    __slots__ = '_heap'
+    __slots__ = '_heap' # to make `MinHeap` memory-efficient
     
     def __init__(self, iterable: Iterable[T]):
         self._heap: list[T] = list(iterable)
