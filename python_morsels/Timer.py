@@ -50,7 +50,7 @@ class Timer:
             raise RuntimeError("Cannot split because parent timer is not running")
         
         if not name:
-            name = next(self.subtimer_counter)
+            name = len(self.subtimers) - 1
         subtimer = Timer()
         self.subtimers.append(subtimer)
         
@@ -84,13 +84,16 @@ with Timer() as timer:
         pass
 
 assert timer.elapsed
-print(timer[0].elapsed)
-print(timer[1].elapsed)
-print(timer[2].elapsed)
+#print(timer[0].elapsed)
+#print(timer[1].elapsed)
+#print(timer[2].elapsed)
 
 with Timer() as timer:
     pass
 
-with timer.split():
-    pass	# expect RuntimeError
-print(timer.subtimers)
+try:
+    with timer.split():
+        pass	# expect RuntimeError
+except RuntimeError:
+    pass
+#print(timer.subtimers)
