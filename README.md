@@ -17,7 +17,3 @@ The scripts in this folder are refactored versions of Kopec's codes and include 
 
 I think this is a good book for non-computer science, intermediate-level Python learners to practice writing Python. Kopec's code only uses the standard libraries even for implementation of k-means clustering and neural network (obviously not recommended for actual use). There is a lot of refactoring you can do to make the code more up to date (especially with the recent update on `typing` module) and Pythonic (e.g. constructing lists with comprehension instead of `for` loop). I can't speak for the computer science side of this book, but I found it accessible and enough to give me a foothold to read the next level of material.
 
-
-## [*Object-Oriented Python: Master OOP by Building Games and GUIs*](https://nostarch.com/object-oriented-python) by Ira Kale
-
-(Currently reading)
