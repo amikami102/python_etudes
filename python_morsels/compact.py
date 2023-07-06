@@ -9,13 +9,8 @@ SENTINEL = object()
 
 def compact(iterable: Iterable) -> Iterator:
     """ Remove adjacent duplicate values in `sequence`. """
-    it = iter(iterable)
-    previous = next(it, SENTINEL)
-    if previous is SENTINEL:
-        return ()
-    
-    yield previous
-    for item in it:
+    previous = SENTINEL
+    for item in iterable:
         if previous != item:
             yield item
             previous = item
