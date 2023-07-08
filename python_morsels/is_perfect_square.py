@@ -30,9 +30,9 @@ def is_perfect_square(number: Number, *, complex: bool = False) -> bool:
     if Decimal(number) > getcontext().Emax:
         with localcontext() as ctx:
             ctx.prec = 50	# for really big numbers
-            return not Decimal(number).sqrt() % 1
+            return Decimal(number).sqrt() % 1 == 0
     else:
-        return not sqrt(number) % 1
+        return sqrt(number) % 1 == 0
 
 # base problem
 assert is_perfect_square(64)
