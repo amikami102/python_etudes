@@ -5,30 +5,31 @@ A script defining `EasyDict` class that is a bare-bones mapping class, even more
 from typing import *
 
 
-from collections import UserDict
-
-class EasyDict(UserDict):
-
-    def __init__(self, mapping = {}, normalize = False, **kwargs):
-        self.normalize = normalize
-        super().__init__(mapping, **kwargs)
+class EasyDict:
+    """A class that can use key and attribute lookups and assignments interchangeably. """
     
-    @property
-    def data(self):
-        return self.__dict__
-    
-    @data.setter
-    def data(self, data):
-        self.__dict__.update(data)
-    
-    def normalized(self, key):
-        return key.replace(' ', '_') if self.normalize else key 
+    def __init__(self, mapping: dict = None, **kwargs):
+        if mapping:
+            self.__dict__.update(mapping)
+        self.__dict__.update(**kwargs)
     
     def __getitem__(self, key):
-        return self.__dict__[self.normalized(key)]
+        # return self.__dict__[key]
+        return getattr(self, key)
     
     def __setitem__(self, key, value):
-        self.__dict__[self.normalized(key)] = value
+        # self.__dict__[key] = value
+        setattr(self, key, value)
+    
+    def __eq__(self, other: 'EasyDict') -> bool:
+        if not isinstance(other, EasyDict):
+            return NotImplemented
+        else:
+            return self.__dict__ == other.__dict__
+            
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
 
 
 # base problem
