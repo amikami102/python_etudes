@@ -13,7 +13,7 @@ def instance_tracker(attr_name: str = 'instances') -> 'InstanceTracker':
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             if not hasattr(type(self), attr_name):
-                setattr(InstanceTracker, attr_name, [])
+                setattr(type(self), attr_name, [])
             getattr(type(self), attr_name).append(self)
             
     return InstanceTracker
