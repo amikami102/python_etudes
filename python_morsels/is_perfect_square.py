@@ -33,6 +33,7 @@ def is_perfect_square(number: Number, *, complex: bool = False) -> bool:
             return Decimal(number).sqrt() % 1 == 0
     else:
         return sqrt(number) % 1 == 0
+    
 
 # base problem
 assert is_perfect_square(64)
