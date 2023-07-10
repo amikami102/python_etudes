@@ -50,7 +50,6 @@ Usage example:
 import argparse
 import unicodedata
 
-
 NATO_CODES = [
     (code[0].casefold(), code.capitalize()) for code in
     (
@@ -72,30 +71,28 @@ def clean_words_input(words: list[str]) -> str:
     ).casefold()
     
     
-
-
-
 if __name__ == '__main__':
     
-    parser = argparse.ArgumentParser('Spell out words phonetically using NATO phonetic alphabet')
-    parser.add_argument('words', nargs='*', type=str)
-    parser.add_argument('-f', type=argparse.FileType('r'), dest='wordfile')
+    parser = argparse.ArgumentParser('Spell out words phonetically using NATO phonetic alphabet or user-specified code file')
+    parser.add_argument('words', nargs='*', type=str, help='Word(s) to be spelled out')
+    parser.add_argument('-f', type=argparse.FileType('r'), dest='codefile', help='Optional file containing alternative codes')
     args = parser.parse_args()
     words = args.words
     
-    # ask for user input
+    # Ask for user input if no argument was given
     if not words:
         user_input = input('Text to spell out: ')
         args.words = user_input.split(' ')
     
-    # check if a file was passed
-    if args.wordfile:
-        codes = [tuple(line.split()) for line in args.wordfile]
-        phonetics_map = dict(codes)
+    # Check if a file was passed
+    if args.codefile:
+        phonetics_map = dict(
+            [tuple(line.split()) for line in args.codefile]
+        )
     else:
         phonetics_map = dict(NATO_CODES)
     
-    # spell out the words
+    # Spell out the words
     for char in clean_words_input(args.words):
         if char == ' ':
             print('')
