@@ -3,8 +3,16 @@
 A script defining `partial` callable that allows for partial evaluation of given functions.
 """
 from typing import *
+import functools
 
-SKIP = object()
+
+class SkipType:
+    """ A partial argument to be skipped and filled-in later. """
+    def __repr__(self):
+        return "<partial SKIP argument>"
+
+
+SKIP = SkipType()
 
 
 def fill_in_skipped_args(placeholders: tuple, fillers: tuple) -> tuple:
@@ -19,18 +27,14 @@ def fill_in_skipped_args(placeholders: tuple, fillers: tuple) -> tuple:
     return (*filled, *fillers)
 
 
-class partial:
+class partial(functools.partial):
     """ A class that impelments partial evaluation of a given function. """
-    def __init__(self, func, *args, **kwargs):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
     
     def __call__(self, *args, **kwargs):
-        all_args = tuple(fill_in_skipped_args(self.args, args))
+        all_args = fill_in_skipped_args(self.args, args)
         if SKIP in all_args:
-            raise TypeError('Not enough positional argumnets')
-        all_kwargs = {**self.kwargs, **kwargs}
+            raise TypeError('Not enough positional arguments')
+        all_kwargs = {**self.keywords, **kwargs}
         return self.func(*all_args, **all_kwargs)
     
     def partial(self, *args, **kwargs) -> 'partial':
