@@ -24,7 +24,7 @@ class float_range:
             val += self.step
     
     def __reversed__(self) -> Iterator[float]:
-        # calculate the last value
+        # calculate the last value first
         val = self.start + (len(self) - 1) * self.step
         for _ in range(len(self)):
             yield val
