@@ -9,7 +9,15 @@ class WriteSpy:
     """ A class that acts as a writable file stream that writes to two file-like objects at once. """
     
     def __init__(self, *files, close: bool = True):
-        self.files = files
+        """
+        files:	Iterable[io.TextIO]
+            files to write into
+        _close: bool, default True
+            close the files if True, else do not close the files
+        closed: bool
+            indicates whether `WriteSpy` instance is closed
+        """
+        self.files: Iterable[io.TextIO] = files
         self._close = close
         self._closed = False
     
@@ -17,35 +25,30 @@ class WriteSpy:
         return self
     
     def __exit__(self, type, value, traceback):
-        for file in self.files:
-            file.flush()
-            if self._close:
-                file.close()
-            else:
-                file.detach()
-        self._closed = True
+        self.close()
     
     def write(self, text: str):
         if self._closed:
-            raise ValueError
+            raise ValueError('File closed')
         for file in self.files:
             file.write(text)
     
-    def writable(self) -> tuple[bool]:
+    def writable(self) -> bool:
+        """ Basically the opposite of `_closed` attribute value. """
         if self._closed:
             raise ValueError
-        return tuple(file.writable() for file in self.files)
-    
-    def close(self) -> bool:
-        self._closed = True
+        return True
     
     @property
     def closed(self) -> bool:
         return self._closed
     
-    @closed.setter
-    def closed(self, status: bool):
-        self._closed = status
+    def close(self) -> None:
+        """ Set `self._closed` to True. If `self._close` is True, close the files. """
+        if self._close:
+            for file in self.files:
+                file.close()
+        self._closed = True
     
 
 # base problem
@@ -65,7 +68,7 @@ f1 = open('file1.txt', mode='wt')
 with WriteSpy(sys.stdout, f1, close=False) as combined:
     print("Hello!", file=combined)
 assert combined.closed
-assert (f1.closed, sys.stdout.closed)
+assert (f1.closed, sys.stdout.closed) == (False, False)
 try:
     combined.writable()
 except ValueError:
