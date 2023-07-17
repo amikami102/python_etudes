@@ -13,10 +13,9 @@ SENTINEL = object()
 def chunked(iterable: Iterable[T], n: int, *, fill: T = SENTINEL) -> list[list[T]]:
     """ Return a list of chunk size `n` of `sequence`. """
     it = iter(iterable)
-    while chunk := list(islice(it, n)):
-        if fill is not SENTINEL:
-            while len(chunk) < n:
-                chunk.append(fill)
+    while chunk := tuple(islice(it, n)):
+        if fill is not SENTINEL and len(chunk) < n:
+            chunk += (fill,) * (n - len(chunk))
         yield chunk
     
 
