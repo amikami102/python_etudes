@@ -43,11 +43,12 @@ else:
     print('something else happened')
 assert (p.x, p.y, p.z) == (4, 1, 1)
 
-# bonus 1, make the initial value optinal and make sure PositiveNumber does not leak memory
+# bonus 1, make the initial value optinal and make sure `PositiveNumber` does not leak memory
 class Point:
     x = PositiveNumber()
     y = PositiveNumber()
     z = PositiveNumber()
+    
 p = Point()
 p.x = 4
 assert p.x == 4
