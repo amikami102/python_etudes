@@ -1,6 +1,6 @@
 # cached_property.py
 """
-A script re-implementing `functools.cache_property`.
+A script re-implementing `functools.cache_property`, which is a descriptor-decorator.
 """
 SENTINEL = object()	# in case the value being cached is None
 

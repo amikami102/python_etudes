@@ -1,6 +1,6 @@
 # computed_property.py
 """
-A script defining `computed_property` decorator,
+A script defining a `computed_property` descriptor-decorator,
 which accepts an attribute name and caches the value of the property as long as that attribute's value remains the same.
 """
 from typing import *
@@ -17,7 +17,7 @@ class computed_property:
         self.watched_attr = '_' + self.attr_name
     
     def __call__(self, func):
-        """ Make `computed_proeperty` both a type and a callable-that-returns-a-callable."""
+        """ Make `computed_proeperty` both a type and a callable that returns a callable."""
         self.func = func
         return self	# so that `@computed_property(...)` will return the value of `computed_property.__call__`
         

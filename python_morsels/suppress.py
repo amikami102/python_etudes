@@ -35,7 +35,7 @@ class suppress(ContextDecorator):
                
 
 
-# base problem
+# base problem, which is just the built-in `contextlib.suppress` class
 with suppress(NameError):
     print("Hi!")
     print("It's nice to meet you,", name)
