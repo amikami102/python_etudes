@@ -1,5 +1,8 @@
 markdown-it-py==3.0.0
 mdurl==0.1.2
 Pygments==2.15.1
+PyInputPlus==0.2.12
 pyperclip==1.8.2
+PySimpleValidate==0.2.12
 rich==13.4.2
+stdiomask==0.0.6
