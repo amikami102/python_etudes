@@ -8,6 +8,7 @@ T = TypeVar('T')
 
 def minmax(iterable: Iterable[T], *, key: Callable = None) -> tuple[T, T]:
     """Return the minimum and maximum of `iterable`."""
+    iterable = list(iterable)
     return min(iterable, key=key), max(iterable, key=key)
 
 
@@ -33,3 +34,8 @@ else:
 words = ["hi", "HEY", "Hello"]
 assert minmax(words, key=lambda s: s.lower()) == ('Hello', 'hi')
 assert minmax(words, key=len) == ('hi', 'Hello')
+
+# bonus 2, allow `minmax` to accept any iterable
+numbers = {8, 7, 5, 3, 9, 6, 2}
+assert minmax(numbers) == (2, 9)
+assert minmax(n**2 for n in numbers) == (4, 81)
