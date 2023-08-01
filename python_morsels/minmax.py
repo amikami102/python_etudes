@@ -6,9 +6,9 @@ from typing import *
 
 T = TypeVar('T')
 
-def minmax(iterable: Iterable[T]) -> tuple[T, T]:
+def minmax(iterable: Iterable[T], *, key: Callable = None) -> tuple[T, T]:
     """Return the minimum and maximum of `iterable`."""
-    return min(iterable), max(iterable)
+    return min(iterable, key=key), max(iterable, key=key)
 
 
 # base problem
@@ -28,3 +28,8 @@ except TypeError:
     print('passed')
 else:
     print('failed')
+
+# bonus 1, test key-word only argument `key`
+words = ["hi", "HEY", "Hello"]
+assert minmax(words, key=lambda s: s.lower()) == ('Hello', 'hi')
+assert minmax(words, key=len) == ('hi', 'Hello')
