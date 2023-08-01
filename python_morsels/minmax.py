@@ -8,6 +8,7 @@ from collections import namedtuple
 T = TypeVar('T')
 MinMax = namedtuple('MinMax', ('min', 'max'))
 
+
 def minmax(iterable: Iterable[T], *, key: Callable = None) -> MinMax:
     """Return the minimum and maximum of `iterable`."""
     iterable = list(iterable)
