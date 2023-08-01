@@ -11,8 +11,19 @@ MinMax = namedtuple('MinMax', ('min', 'max'))
 
 def minmax(iterable: Iterable[T], *, key: Callable = None) -> MinMax:
     """Return the minimum and maximum of `iterable`."""
-    iterable = list(iterable)
-    return MinMax(min(iterable, key=key), max(iterable, key=key))
+    iterator = iter(iterable)
+    try:
+        minimum = maximum = next(iterator)
+        min_key = max_key = key(minimum) if key else minimum
+    except StopIteration as e:
+        raise ValueError('Iterable empty') from e
+    for item in iterator:
+        k = key(item) if key else item
+        if k < min_key:
+            min_key, minimum = k, item
+        if max_key < k:
+            max_key, maximum = k, item
+    return MinMax(minimum, maximum)
 
 
 # base problem
