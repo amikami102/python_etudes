@@ -1,14 +1,18 @@
 # ProxyDict.py
 """
-A script defining `ProxyDict` class, which works like regular mapping class but is immutable.
+A script defining `ProxyDict` class, which wraps around a dictionary to make it immutable.
 """
 from typing import *
 from collections import ChainMap
-from rich import print
 
 
 class ProxyDict(Mapping):
-    """ A class that makes an immutable dictionary. """
+    """
+    An immutable dictionary-wrapper class that
+        - allows key lookups,
+        - has `keys()` method,
+        - works with equality checks.
+    """
     
     def __init__(self, *mappings):
         self.mapping: ChainMap = ChainMap(*reversed(mappings))
@@ -23,7 +27,7 @@ class ProxyDict(Mapping):
         return sum(1 for _ in self)
     
     def __repr__(self) -> str:
-        return f'{type(self).__name__}({repr(self.mapping)})'
+        return f'{type(self).__name__}({repr(dict(self.mapping))})'
 
 
 
@@ -77,3 +81,15 @@ assert proxy_data['last_updated'] == 1995
 del site_data['name']
 assert proxy_data['name'] == 'asako mikami'
 print(proxy_data.mapping.maps)
+
+# bonus 2, allow `ProxyDict` objects to be iterable and have nice string representation
+user_data = {'name': 'asako mikami', 'active': False}
+proxy_data = ProxyDict(user_data)
+assert [key for key in proxy_data] == ['name', 'active']
+assert str(proxy_data) == "ProxyDict({'name': 'asako mikami', 'active': False})"
+
+# bonus 3, support equality with other dictionaries
+p1 = ProxyDict(user_data)
+p2 = ProxyDict(user_data.copy())
+assert p1 == p2
+assert p2 == user_data
