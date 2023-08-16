@@ -33,7 +33,7 @@ class computed_property:
         raise AttributeError
 
         
-
+# base problem
 class Circle:
     def __init__(self, radius=1):
         self.radius = radius
@@ -43,8 +43,6 @@ class Circle:
         print('computing diameter')
         return self.radius * 2
 
-
-# base problem
 circle = Circle()
 circle.diameter # computing diameter
 assert circle.diameter == 2
