@@ -11,8 +11,6 @@ T = TypeVar('T')
 
 class CyclicList(UserList):
     """ A list-like class except that looping over it will result in an inifinite loop."""
-    def __iter__(self) -> Iterator[T]:
-        yield from cycle(self.data)
     
     def __getitem__(self, index: int|slice) -> T:
         """
@@ -27,11 +25,11 @@ class CyclicList(UserList):
             start = index.start if index.start else 0
             stop = index.stop if index.stop else \
                 len(self.data) if start >= 0 else 0
-            return list(self[i] for i in range(start, stop))
-        return self.data[index % len(self.data)]
+            return [self[i] for i in range(start, stop)]
+        return super().__getitem__(index % len(self))
     
-    def __setitem__(self, key: int, value: T) -> T:
-        self.data[key % len(self.data)] = value
+    def __setitem__(self, key: int, value: T) -> None:
+        super().__setitem__(key % len(self), value)
     
 
 # base problem
