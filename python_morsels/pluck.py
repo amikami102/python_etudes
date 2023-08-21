@@ -11,7 +11,8 @@ SENTINEL = object()
 def single_pluck(nested_dict: dict[dict], path: str, sep: str, default: T) -> T:
     """
     Return the value at the `sep`-concatenated string path, `path`, of `nested_dict`.
-    If `default` is not None, return `default` argument if the key does not exist; otherwise raise KeyError.
+    If `default` is not None, return `default` argument if the key does not exist;
+    otherwise raise KeyError.
     """
     if not path:
         # we've reached the destination of the path
