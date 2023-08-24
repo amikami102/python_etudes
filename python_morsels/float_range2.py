@@ -8,9 +8,15 @@ from numbers import Number
 
 
 class float_range(Sequence):
-    """A `range`-like class that works with any numbers."""
+    """A `range`-like class that works with any numeric type."""
     
     def __init__(self, stop: Number, start: Number = None, step: Number = None, /):
+        """
+        Initialize by specifying 
+            - the `stop` value,
+            - both the `start` and `stop` values, or
+            - all three `start`, `stop`, and `step` values.
+        """
         match (start, stop, step):
             case Number(), Number(), Number():
                 self.start, self.stop, self.step = stop, start, step
@@ -37,13 +43,17 @@ class float_range(Sequence):
             return self.start + (len(self) + index) * self.step
         else:
             raise IndexError('float_range index out of range')
-    
+
+# Unnecessary to define `__iter__` once `__len__` and `__getitem__` are defined,
+# as Python understands the object with these methods to be a sequence.
+# A sequence will come with a freebie `__reversed__` method.
+# You don't even need to inherit from `typing.Sequence` if you're not using `super()`.
 #     def __iter__(self) -> Iterator[Number]:
 #         return (
 #             self.start + i * self.step
 #             for i in range(0, len(self))
 #         )      
-        
+
 
 # base problem
 floater = float_range(1, 10, 2)
