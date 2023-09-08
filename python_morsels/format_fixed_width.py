@@ -32,8 +32,11 @@ def format_fixed_width(
         alignments: list[str], default None
             the list of 'L' or 'R' indicating whether the column should be (L)eft or (R)ight justified
     """
-    cols_fixed = []
-    spacing = ' ' * padding
+    rows_of_columns = [
+        [str(col) for col in row]
+        for row in rows_of_columns
+    ]
+    
     if not widths:
         try:
             widths = [0] * len(rows_of_columns[0])
@@ -45,7 +48,7 @@ def format_fixed_width(
         except:
             alignments = [] # this happens when `rows_of_columns` is an empty list
 
-
+    cols_fixed = []
     for *rows, custom_width, align in zip(*rows_of_columns, widths, alignments):
         width = max(
             len(max(rows, key=len)),
@@ -57,7 +60,7 @@ def format_fixed_width(
                 for cell in rows
             ]
         )
-
+    spacing = ' ' * padding
     return '\n'.join([spacing.join(cells).rstrip() for cells in zip(*cols_fixed)])
         
         

@@ -1,59 +1,60 @@
 # count_lines.py
 """
-Count all the lines within .py files in a given directory recursively.
-
-Usage example:
-    $ mkdir toydir
-    $ touch toydir/tau.py
-    $ echo 'tau = 6.283185307179586\n' > toydir/tau.py
-    $ touch toydir/helloworld.py
-    $ echo 'print("hello world")' > helloworld.py
-    $ touch toydir/file1.md
-    $ echo 'This is the first line' >> toydir/file1.md
-    $ echo 'This is the second line' >> toydir/file1.md
-    $ echo '\n
-    This is the fourth, but the third non-blank, line' >> toydir/file1.md
-    $ python count_lines.py toydir
-    
-    
+A script defining a function `count_lines()` that counts all the lines within .py files in a given directory.
 """
-from rich import print
+from typing import *
 import sys
-import pathlib
-from dataclasses import dataclass
-import collections
+from pathlib import Path
+from dataclasses import dataclass, astuple
+from collections import UserDict
+
+
 
 @dataclass
-class ContentStat:
-    """
-    A dataclass holding number of files
-    and the number of lines, and number of non-blank lines in these files."""
-    files: int	= 0		# number of .py files
-    lines: int	= 0		# number of lines
-    non_blank: int =0	# number of non-blank lines, i.e. non_blank <= lines
-
-
-def count_lines(dir: str, extensions: list[str] = ['py', 'md', 'html', 'js']) -> dict[str, int]:
-    """
-    Return a dictionary with the name of the file extension without the period as the keys
-    and ContentStat as values. Recursively search for all target files.
+class Stat:
+    files: int = 0
+    lines: int = 0
+    non_blank: int = 0
     
-    Even though by default the function will search for files ending in 'py', 'md', 'html', or 'js',
-    any file type that wasn't found in the directory should not be included in the output dictionary.
+    def __iter__(self) -> Iterator[int]:
+        yield from astuple(self)
+
+
+def count_lines(directories: Iterable[Path], extensions: list[str] = ['py', 'md', 'html', 'js']) -> dict[str, dict[str, int]]:
     """
-    allowed: set[str] = {'py', 'md', 'html', 'js'}
-    extensions: set[str] = set(extensions).intersection(allowed)
-    out: dict[str, CountentStat]  = {}
+    Return a dictionary whose keys are file extensions and values are their file and line counts.
+    """
+    
+    unique_files = {
+        path
+        for ext in extensions
+        for directory in directories
+        for path in directory.rglob(f'*.{ext}')
+    }
+    for path in directories:
+        # Path.rglob() does not return anything when the path object is a file even
+        # if the patten matches
+        if path.is_file() and path.suffix.lstrip('.') in extensions:
+            unique_files.add(path)
+    
+    counts_dict: dict[str, Stat] = UserDict()
+    for file in unique_files:
+        stat = counts_dict.setdefault(file.suffix.lstrip('.'), Stat())
+        stat.files += 1
+        with open(file, 'r') as f:
+            for line in f:
+                stat.lines += 1
+                if line.strip():
+                    stat.non_blank += 1
+    return counts_dict
 
-    for file in pathlib.Path(dir).rglob('*'):
-        if (key := file.suffix.lstrip('.')) in extensions:
-            out.setdefault(key, ContentStat())
-            out[key].files += 1
-            with open(file, 'r') as f:
-                for line in f:
-                    out[key].lines += 1
-                    if line.strip():
-                        out[key].non_blank += 1
-    return out
 
-print(count_lines('toydir', extensions=['py', 'md', 'bin']))
+def convert_to_list(counts_dict: dict[str, dict[str, int]]) -> list[tuple]:
+    """Convert `counts_dict` into a list of tuples."""
+    return sorted([(ext, *counts) for ext, counts in counts_dict.items()])
+
+
+if __name__ == '__main__':
+    print(
+        count_lines(Path('toydir').glob(), extensions=['py', 'md', 'bin'])
+    )
