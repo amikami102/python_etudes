@@ -8,7 +8,7 @@ from dataclasses import dataclass, FrozenInstanceError, fields
 
 def easyclass(cls: Callable=None, /, *, frozen: bool =True, iter: bool =True, index: bool = False, **kwargs) -> Callable:
     """
-    Returns a decorator that turns `cls` into a dataclass with optional argume
+    Returns a decorator that turns `cls` into a dataclass.
     Unless specified, the output will always be a frozen dataclass that is iterable.
     Can be called with or without arguments.
     """
