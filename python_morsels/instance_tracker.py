@@ -6,16 +6,17 @@ from typing import *
 
 
 def instance_tracker(attr_name: str = 'instances') -> 'InstanceTracker':
-    """ Return a class that has an attribute that keeps track of instances. """
-    
+    """
+    Return a class that has an attribute that keeps track of instances.
+    The name of the attribute can be customized by `attr_name` argument.
+    """
     class InstanceTracker:
-        
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            if not hasattr(type(self), attr_name):
-                setattr(type(self), attr_name, [])
-            getattr(type(self), attr_name).append(self)
-            
+        def __new__(cls, *args, **kwargs):
+            """Relying on `__new__` in case the subclass doesn't use `super().__init__`."""
+            obj = super().__new__(cls)	# create new instance using __new__ defined by next MRO class
+            getattr(cls, attr_name).append(obj)
+            return obj
+    setattr(InstanceTracker, attr_name, [])     
     return InstanceTracker
 
 
@@ -36,6 +37,7 @@ assert Account.instances == [a1, a2]
 class Animal:
     def __init__(self, name):
         self.name = name
+        
 class Squirrel(instance_tracker(), Animal):
     def __init__(self, name, nervousness=0.99):
         self.nervousness = nervousness
@@ -45,7 +47,7 @@ squirrel1 = Squirrel(name='Mike')
 squirrel2 = Squirrel(name='Carol', nervousness=0.5)
 assert squirrel1.name == 'Mike'
 assert squirrel2.name == 'Carol'
-assert set(Squirrel.instances) == {squirrel1, squirrel2}
+assert list(Squirrel.instances) == [squirrel1, squirrel2]
 
 # bonus 1, test that `instance_tracker` can optional accept attribute name to use for storing instances
 from dataclasses import dataclass
@@ -57,7 +59,19 @@ class Person:
 class TrackedPerson(instance_tracker('registry'), Person):
     """ Example of inheritance and renaming 'instance' to 'registry'. """
     
+    
 brett = TrackedPerson("Brett Cannon")
 guido = TrackedPerson("Guido van Rossum")
 carol = TrackedPerson("Carol Willing")
 assert list(TrackedPerson.registry) == [brett, guido, carol]
+
+# bonus 2, make sure `instance_tracker` factory works for subclasses that don't call `super().__init__()`
+class Person(instance_tracker()):
+    def __init__(self, name):
+        self.name = name
+    def __repr__(self):
+        return "Person({!r})".format(self.name)
+
+tanjiro = Person('Kamado Tanjiro')
+nezuko = Person('Kamado Nezuko')
+assert list(Person.instances) == [tanjiro, nezuko]
