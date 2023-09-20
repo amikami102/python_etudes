@@ -1,6 +1,7 @@
 # peekable.py
 """
-A script defining a callable, `peekable`, that lets you peek ahead in your iterator.
+A script defining a callable, `peekable`, which returns an iterator
+that loops over a given iterable and lets you peek ahead in your iterator.
 """
 from typing import *
 
@@ -11,31 +12,38 @@ SENTINEL = object()
 class peekable:
     """An iterator class that lets you peek ahead to the next item."""
     def __init__(self, iterable: Iterable[T]):
-        self._iterable = iter(iterable)
+        self.iterator = iter(iterable)
         self.peeked = SENTINEL
     
     def __next__(self) -> T:
+        """
+        Check that `peeked` attribute has a non-sentinel value.
+        If so, return that non-sentinel value and reset `peeked`.
+        Otherwise, return the next value of iterator.
+        """
         if self.peeked is not SENTINEL:
             value, self.peeked = self.peeked, SENTINEL
             return value
-        return next(self._iterable)
+        return next(self.iterator)
     
     def __iter__(self) -> 'peekable':
         return self # Required by definition of iterator
     
     def peek(self, default: T = SENTINEL) -> T:
-        """Cache the next value in `_iterable` and return it."""
-        if self.peeked is not SENTINEL:
-            return self.peeked
-        try:
-            self.peeked = next(self._iterable)
-            return self.peeked
-        except StopIteration:
-            if default is not SENTINEL:
-                self.peeked = default
-                return self.peeked
-            else:
-                raise
+        """
+        Cache the next value of the iterator in `peeked` attribute
+        and return the cached value. If the iterator is empty,
+        return `default` value as long as it is non-sentinel; otherwise,
+        raise StopIteration.
+        """
+        if self.peeked is SENTINEL:
+            # either because no peeking has occurred
+            # or the cache has been reset due to recent `next()` call
+            self.peeked = next(self.iterator, default)
+            if self.peeked is SENTINEL:
+                # because the iterator is empty
+                raise StopIteration
+        return self.peeked
             
 
 # base problem
