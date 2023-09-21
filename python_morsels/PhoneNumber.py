@@ -1,110 +1,111 @@
 # PhoneNumber.py
 """
-A script defining `PhoneNumber`, a class that represents a US-style phone number.
+A script defining `PhoneNumber`, a class that represents a US-style
+phone number.
 """
+from typing import Iterator
 import re
+from dataclasses import dataclass, field, InitVar, astuple
 
-from rich import print
+US_NUMBER_RE = re.compile("""
+    ^			# start of string
+    \W?			# optional non-word characters like '('
+    (\d{3})		# area code (captured)
+    \W?			# optional non-word characters like ')'
+    \W{,3}		# up to 3 non-word characters like ' - '
+    (\d{3})		# prefix (captured)
+    \W{,3}		# up to 3 non-word characters like ' - '
+    (\d{4})		# line number (captured)
+    $			# end of string
+""", re.VERBOSE)
 
 
-valid_format = re.compile(r"""^
-[(]{0,1}[0-9]{3}[)]{0,1} # area code
-(((\s\W\s){0,1})|[-\s\.]{0,1}) # separator
-[0-9]{3} # prefix
-(((\s\W\s){0,1})|[-\s\.]{0,1}) # separator
-[0-9]{4}  # line number
-$""",
-re.X)
-
+@dataclass(eq=True, frozen=True)
 class PhoneNumber:
-    """
-    A class object that holds US-style phone number.
-    The phone number is checked that it is a US phone number during class instantiation.
-
-    This object is immutable and hashable.
-
-    Attributes
-    ----------
-        area_code: str
-            the first three digits
-        prefix: str
-            the next 3 digits following the area code
-        line_number: str
-            the last 4 digits
-    """
-
-
-    def __init__(self, phone_number: str):
-        if not re.match(valid_format, phone_number):
-            raise ValueError('Invalid phone number')
-        numbers: list[str] = [p for p in phone_number if p.isdigit()]
-        super().__setattr__('area_code', ''.join(numbers[:3]))
-        super().__setattr__('prefix', ''.join(numbers[3:6]))
-        super().__setattr__('line_number', ''.join(numbers[6:]))
+    """A US phone number."""
+    number: InitVar[str]
+    area_code: str = field(init=False)
+    prefix: str = field(init=False)
+    line_number: str = field(init=False)
+    
+    
+    def __post_init__(self, number: str):
+        if match := US_NUMBER_RE.match(number):
+            area_code, prefix, line_number = match.groups()
+            super().__setattr__('area_code', area_code)
+            super().__setattr__('prefix', prefix)
+            super().__setattr__('line_number', line_number)
+        else:
+            raise ValueError
+    
+    def __repr__(self) -> str:
+        number = f"{self.area_code}{self.prefix}{self.line_number}"
+        return f"{type(self).__name__}({number!r})"
 
     def __str__(self) -> str:
-        return '-'.join(
-            (self.area_code, self.prefix, self.line_number)
-            )
+        return f"{self.area_code}-{self.prefix}-{self.line_number}"
 
-    def __repr__(self) -> str:
-        phone_number = ''.join(
-            (self.area_code, self.prefix, self.line_number)
-            )
-        return f'{type(self).__name__}({phone_number!r})'
-
-    def __eq__(self, other: 'PhoneNumber') -> bool:
-        if not isinstance(other, PhoneNumber):
-            return NotImplemented
-        return self.area_code == other.area_code and\
-            self.prefix == other.prefix and\
-            self.line_number == other.line_number
-
-    def __setattr__(self, key, value):
-        raise AttributeError('PhoneNumber cannot be modified.')
-
-    def __hash__(self):
-        return hash(str(self))
+    def __format__(self, fmt: str) -> str:
+        match fmt:
+            case '(':
+                return f"({self.area_code}) {self.prefix}-{self.line_number}"
+            case single_sep if single_sep in {'-', ' ', '.'}:
+                return single_sep.join(iter(self))
+            case sep if sep in {'- ', '. '}:
+                sep = ' ' + sep
+                return sep.join(astuple(self))
+            case '+':
+                return '+1' + ''.join(astuple(self))
+            case '+ ':
+                return '+1 ' + ' '.join(astuple(self))
+            case '':
+                return str(self)
 
 
-if __name__ == '__main__':
+# base problem
+whitehouse = PhoneNumber('(202) 456-1414')
+assert whitehouse.prefix == '456'
+assert whitehouse.area_code == '202'
+assert whitehouse.line_number == '1414'
+assert repr(whitehouse) == "PhoneNumber('2024561414')"
+assert str(whitehouse) == "202-456-1414"
+the_president = PhoneNumber('202.456.1111')
+givewell = PhoneNumber('415 - 689 - 5803')
+give_directly = PhoneNumber('6465044837')
 
-    # Base problem
-    whitehouse = PhoneNumber('(202) 456-1414')
-    print(whitehouse.prefix)
-    print(whitehouse.area_code)
-    print(whitehouse.line_number)
-    print(repr(whitehouse))
-    print(whitehouse)
+# bonus 1, test that ValueError is raised
+try:
+    PhoneNumber("My number is 716-776-2323")
+except ValueError:
+    print('passed')
+try:
+    PhoneNumber("212a664b7665")
+except ValueError:
+    print('passed')
+try:
+    PhoneNumber("21 26 64 76 65")
+except ValueError as e:
+    print('passed')
 
-    the_president = PhoneNumber('202.456.1111')
-    givewell = PhoneNumber('415 - 689 - 5803')
-    give_directly = PhoneNumber('6465044837')
-    print(the_president, givewell, give_directly)
+# bonus 2, test equality, immutability, and hashability
+whitehouse = PhoneNumber('(202) 456-1111')
+the_president = PhoneNumber('202.456.1111')
+assert whitehouse == the_president
+numbers = {whitehouse}
+assert whitehouse in numbers
+try:
+    whitehouse.area_code = 808
+except AttributeError:
+    print('passed immutability')
 
-    # Bonus 1
-    try:
-        PhoneNumber("My number is 716-776-2323")
-    except ValueError as e:
-        print('Invalid due to incorrect string value')
-
-    try:
-        PhoneNumber("88-716-776-2323")
-    except ValueError as e:
-        print('Invalid due to extra numbers')
-
-    try:
-        PhoneNumber("21 26 64 76 65")
-    except ValueError as e:
-        print('Invalid due to invalid grouping')
-
-    # Bonus 2
-    del whitehouse
-    del the_president
-    whitehouse = PhoneNumber('(202) 456-1111')
-    the_president = PhoneNumber('202.456.1111')
-    print(whitehouse == the_president)
-    print(hash(whitehouse))
-    numbers = {whitehouse}
-    print(whitehouse in numbers)
-    
+# bonus 3, test customized string formatting
+phone = PhoneNumber('(202) 456-1111')
+assert f"Call {phone:(}" == "Call (202) 456-1111"
+assert f"Call {phone:-}" == "Call 202-456-1111"
+assert f"Call {phone: }" == "Call 202 456 1111"
+assert f"Call {phone:.}" == "Call 202.456.1111"
+assert f"Call {phone:- }" == "Call 202 - 456 - 1111"
+assert f"Call {phone:. }" == "Call 202 . 456 . 1111"
+assert f"Call {phone:+ }" == "Call +1 202 456 1111"
+assert f"Call {phone:+}" == "Call +12024561111"
+assert f"Call {phone}" == "Call 202-456-1111"
