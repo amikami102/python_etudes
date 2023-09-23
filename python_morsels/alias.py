@@ -2,14 +2,13 @@
 """
 A script defining `alias`, a descriptor that makes aliases for class attributes.
 """
-from typing import *
-
 class alias:
+    """A descriptor that makes aliases for attributes."""
     def __init__(self, attribute: str, *, write: bool = False):
         self.attribute = attribute
         self.write = write
         
-    def __get__(self, obj, objtype=None) -> Any:
+    def __get__(self, obj, objtype=None):
         return getattr(obj, self.attribute)
     
     def __set__(self, obj, value) -> None:
@@ -40,7 +39,7 @@ record = DataRecord("148X")
 try:
     record.title = "149S"
 except AttributeError:
-    print('passed')
+    print('passed assignment to alias attribute')
 else:
     print('failed')
 
