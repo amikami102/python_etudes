@@ -19,12 +19,12 @@ class ReverseView(Sequence):
         if 0 <= index < len(self):
             # correct index for len 5 sequence
             # 0 1 2 3 4 	<- reversed(sequence)
-            # 4 3 2 1 -1	<- sequence
+            # 4 3 2 1 0	<- sequence
             return len(self) - index - 1
         else:
             # -5 -4 -3 -2 -1 <- revesed(sequence)
             #  4  3  2  1  0 <- sequence
-            return -1 - index
+            return - index - 1 
 
     def __getitem__(self, index: int|slice) -> T|Sequence:
         if isinstance(index, slice):
