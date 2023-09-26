@@ -6,9 +6,9 @@ from typing import *
 
 
 def uniques_only(iterable: Iterable) -> Iterator:
-    """ Remove duplicates from `iterable`. """
+    """Remove duplicates from `iterable`."""
     hash_seen = set()	# hashable items we've seen in the iterable
-    unhash_seen = []	# hashable items we've seen in the iterable
+    unhash_seen = []		# hashable items we've seen in the iterable
     for item in iterable:
         if isinstance(item, Hashable):
             if item not in hash_seen:
