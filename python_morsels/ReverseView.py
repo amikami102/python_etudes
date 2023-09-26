@@ -7,52 +7,35 @@ from typing import *
 T = TypeVar('T')
 
 
-class ReverseView(MutableSequence):
+class ReverseView(Sequence):
     def __init__(self, sequence: Sequence[T]):
         self.sequence = sequence
 
-    def __iter__(self) -> Iterator[T]:
-        for item in reversed(self.sequence):
-            yield item
-
     def __len__(self) -> int:
         return len(self.sequence)
+    
+    def _index(self, index) -> int:
+        """Retrieve the intended index for the non-revesed sequence."""
+        if 0 <= index < len(self):
+            # correct index for len 5 sequence
+            # 0 1 2 3 4 	<- reversed(sequence)
+            # 4 3 2 1 -1	<- sequence
+            return len(self) - index - 1
+        else:
+            # -5 -4 -3 -2 -1 <- revesed(sequence)
+            #  4  3  2  1  0 <- sequence
+            return -1 - index
 
     def __getitem__(self, index: int|slice) -> T|Sequence:
         if isinstance(index, slice):
             start, stop, step = index.indices(len(self))
-            if start >= 0 and stop > 0:
-                return list(self)[start:stop:step]
-            else:
-                return list(self)[::step]
-        if index < 0:
-            index += len(self)
-        for i, item in enumerate(self):
-            if i == index:
-                return item
+            return [self[i] for i in range(start, stop, step)]
+        else:
+            return self.sequence[self._index(index)]
     
-    def __setitem__(self, index: int, value: T) -> None:
-        self[index] = value
-    
-    def __delitem__(self, index: int) -> None:
-        before, after = self[:index], self[index + 1:]
-        self = before + after
-    
-    def insert(self, index: int, value: T) -> None:
-        before, after = self[:index], self[index: ]
-        self = before + [value] + after
-                
-    def __str__(self) -> str:
-        return f'{list(self)}'
+    def __repr__(self) -> str:
+        return "[" + ", ".join(repr(s) for s in self) + "]"
 
-    def count(self, value: T) -> int:
-        return sum(1 for item in self if item == value)
-
-    def index(self, value: T) -> int:
-        for i, item in enumerate(self):
-            if item == value:
-                return i
-        raise ValueError
 
 
 # base problem
