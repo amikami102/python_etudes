@@ -2,15 +2,15 @@
 """
 A script defining a context manager, `Timer`.
 """
-from time import sleep, perf_counter
-from typing import *
-
-H = TypeVar('Hashable')
+from time import perf_counter as now
+from time import sleep
+from typing import Callable
+import statistics
 
 
 class Timer:
     """
-    A context manager that will tracks the time it takes to finish processing the code inside the `with` context.
+    A context manager that track the time it takes to execute the code.
     
     Attributes
     ----
@@ -21,79 +21,71 @@ class Timer:
             the time it elapsed since `self.start`
             
         runs: list[float]
-            a list of elapsed times of the times the context manager instance was run
-    
-    Methods
-    ----
-        split() -> Timer:
-            creates a sub-timer that must be run inside the parent timer
+            a list of elapsed times 
     """
-    def __init__(self):
+    def __init__(self, func: Callable = None):
         self.runs = []
-        self.subtimers: list[Timer] = []
-        self.parent_exited: bool = False
-    
+        self.func = func
+        
     def __enter__(self):
-        self.start = perf_counter()
+        self.start = now()
         return self
 
-
-    def __exit__(self, *args):
-        self.elapsed = perf_counter() - self.start
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.elapsed = now() - self.start
         self.runs.append(self.elapsed)
-        self.parent_exited: bool = True
-        
-    
-    def split(self, name: str = None) -> 'Timer':
-        """ Instantiate another `Timer` inside the current `Timer`. """
-        if self.parent_exited:
-            raise RuntimeError("Cannot split because parent timer is not running")
-        
-        if not name:
-            name = len(self.subtimers) - 1
-        subtimer = Timer()
-        self.subtimers.append(subtimer)
-        
-        return subtimer
-    
-    def __getitem__(self, subkey: H) -> float:
-        return self.subtimers[subkey]
+
+    def __call__(self, *args, **kwargs):
+        with self:
+            return self.func(*args, **kwargs)
+
+    @property
+    def min(self) -> float:
+        return min(self.runs)
+
+    @property
+    def max(self) -> float:
+        return max(self.runs)
+
+    @property
+    def mean(self) -> float:
+        return statistics.mean(self.runs)
+
+    @property
+    def median(self) -> float:
+        return statistics.median(self.runs)
         
 
 # base problem
 with Timer() as timer:
     sleep(0.01)
 assert timer.elapsed < 0.02
+
+# bonus 1, test `runs` attribute
+timer = Timer()
+with timer:
+    x = sum(range(2**24))
 with timer:
     x = sum(range(2 ** 23))
-
 assert len(timer.runs) == 2
 
-timer2 = Timer()
-with timer2:
-    x = sum(range(2 ** 22))
-assert timer2.elapsed
+# bonus 2, test that `Timer` can be used as decorator
+@Timer
+def sum_of_squares(numbers):
+    return sum(n**2 for n in numbers)
+sum_of_squares(range(2**20))
+sum_of_squares(range(2**21))
+assert len(sum_of_squares.runs) == 2
 
-# bonus 1, implement `Timer.split` method
-with Timer() as timer:
-    with timer.split():
-        sleep(0.02)
-    with timer.split():
-        sleep(0.01)
-    with timer.split():
-        pass
-
-assert timer.elapsed
-#print(timer[0].elapsed)
-#print(timer[1].elapsed)
-#print(timer[2].elapsed)
-
-with Timer() as timer:
-    pass
-
-try:
-    with timer.split():
-        pass	# expect RuntimeError
-except RuntimeError:
-    pass
-#print(timer.subtimers)
+# bonus 3, test `min`, `max`, `mean`, and `median` properties
+wait = Timer(sleep)
+wait(0.02)
+wait(0.03)
+wait(0.05)
+wait(0.08)
+wait(0.03)
+times = sorted(wait.runs)
+assert wait.mean == sum(times)/len(times)
+assert wait.median ==  times[2]
+assert wait.min == times[0]
+assert wait.max == times[-1]
