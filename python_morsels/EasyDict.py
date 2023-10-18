@@ -1,42 +1,53 @@
 # EasyDict.py
 """
-A script defining `EasyDict` class that is a bare-bones mapping class, even more so than `collections.abc.Mapping`.
+A script defining `EasyDict` class that supports key and attribute lookup.
 """
-from typing import *
+from collections import UserDict
 
 
-class EasyDict:
-    """A class that can use key and attribute lookups and assignments interchangeably. """
+class EasyDict(UserDict):
+    """A dictionary-like class that supports key and attribute lookup."""
     
-    def __init__(self, mapping: dict = None, **kwargs):
+    __slots__ = ('data', 'normalize', )
+    
+    def __init__(self, mapping: dict = None, normalize: bool = False, **kwargs):
+        super().__init__()
+        self.normalize = normalize
         if mapping:
-            self.__dict__.update(mapping)
-        self.__dict__.update(**kwargs)
-    
-    def __getitem__(self, key):
-        # return self.__dict__[key]
-        return getattr(self, key)
+            self.data.update(mapping)
+        self.data.update(**kwargs)
+                
+    def _normalize(self, key: str) -> str:
+        return key.replace(' ', '_') if self.normalize else key
     
     def __setitem__(self, key, value):
-        # self.__dict__[key] = value
-        setattr(self, key, value)
+        self.data[self._normalize(key)] = value
     
-    def __eq__(self, other: 'EasyDict') -> bool:
-        if not isinstance(other, EasyDict):
-            return NotImplemented
-        else:
-            return self.__dict__ == other.__dict__
-            
-    def get(self, key, default=None):
-        return getattr(self, key, default)
+    def __getitem__(self, key):
+        return self.data[self._normalize(key)]
+    
+    def __getattr__(self, attrib):
+        try:
+            return self.data[attrib]
+        except KeyError:
+            raise AttributeError
 
+    def __setattr__(self, attrib, value):
+        if attrib in self.__slots__:
+            return super().__setattr__(attrib, value)
+        else:
+            self.data[attrib] = value
+    
+    def get(self, key, default=None):
+        # `UserDict.get()` no longer relies on `__getitem__` as of Python 3.12
+        return self.data.get(self._normalize(key), default)
 
 
 # base problem
-person = EasyDict({'name': "Trey Hunner", 'location': "San Diego"})
-assert person['location'] == 'San Diego'
-assert person.name == 'Trey Hunner'
-assert EasyDict()
+person = EasyDict({'name': "Sakata Gintoki", 'location': "Edo"})
+assert person['location'] == 'Edo'
+assert person.name == 'Sakata Gintoki'
+EasyDict()
 
 # bonus 1, allow key and attribute assignments
 person['name'] = 'asako'
@@ -50,5 +61,11 @@ assert person.location == 'Brookline, MA'
 assert person == EasyDict(name='asako', location='Brookline, MA')
 assert person != EasyDict(name='ayako', location='Brookline, MA')
 assert not person.get('profession')
-assert person.get('profession', 'unknown') == 'unknown'
+assert person.get('profession', 'unemployed') == 'unemployed'
 assert person.get('name', 'unknown') == 'asako'
+
+# bonus 3, test `normalize` argument
+person = EasyDict(name="Sakata Gintoki", location="Edo", normalize=True)
+person['company name'] = "Yorozuya"
+assert person.company_name == 'Yorozuya'
+assert person['company name'] == 'Yorozuya'
