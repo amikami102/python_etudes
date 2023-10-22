@@ -1,17 +1,14 @@
 # Comparator.py
 """
-A script implementing `Comparator` class that allows the `==` operation to work as almost-equal comparison.
+A script defining `Comparator` class that implements an almost-equal comparison.
 """
 from numbers import Number
-import math
-
-from rich import print
 
 
 class Comparator:
     """Object that is equal to a very small range of numbers."""
     
-    def __init__(self, number: Number, delta: float = 0.000_0001):
+    def __init__(self, number: Number, *, delta: float = 0.000_0001):
         self.delta: float = delta
         self.number: Number = number
         
@@ -60,8 +57,6 @@ class Comparator:
 
 # base problem
 n = 0.1 + 0.02
-print(n)
-print(n - 0.12)		# not zero
 target_number = Comparator(0.12)
 assert n == target_number
 
@@ -70,8 +65,9 @@ assert close_to_five == 5.05
 assert close_to_five == 4.98
 assert close_to_five != 5.2
 
-print(Comparator(5, delta=0.1))	# test string representation
+assert repr(Comparator(5, delta=0.1)) == 'Comparator(5, delta=0.1)'
 
+import math
 assert math.sqrt(5) == Comparator(2.236, delta=0.01)
 assert math.sqrt(5.1) != Comparator(2.236, delta=0.01)
 
@@ -84,15 +80,13 @@ assert  -5.75 == Comparator(-6, delta=0.25)
 almost_100 = Comparator(100, delta=1)
 almost_50 = almost_100 - 50
 almost_110 = 10 + almost_100
-print(almost_50)
 assert 109 == almost_110
 assert 108 != almost_110
 assert 7 - Comparator(7, delta=0.1) == 0.05
-print(6 - Comparator(7, delta=0.1))
 assert 6 - Comparator(7, delta=0.1) == -1.05
 
 # bonus 2
 nearly_five = Comparator(5, delta=0.1)
 almost_105 = nearly_five + almost_100
-print(almost_105)
+assert repr(almost_105) == 'Comparator(105, delta=1)'
 
