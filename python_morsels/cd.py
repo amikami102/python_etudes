@@ -3,55 +3,40 @@
 A script implementing a context manager class called `cd` that will change directories temporarily.
 """
 import os
-import tempfile
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from contextlib import contextmanager, nullcontext
+from dataclasses import dataclass
 
-from rich import print
+
+@dataclass(frozen=True)
+class Context:
+    previous: os.PathLike
+    current: os.PathLike
 
 
-class cd:
-    """Context manager for temporarily changing directories"""
-    
-    def __init__(self, directory: str | Path = None):
-        """
-        If `directory` is `None`, a temporary directory will be created.
-        Do not switch directory yet.
-        """
-        self.directory = directory
-        
-    def __enter__(self):
-        """
-        Switch to `self.directory` or a temporary directory if `self.directory` is `None`.
-        """
-        
-        self.current = Path().resolve()	# keep track of the original directory
-        
-        if not self.directory:	# create temporary directory
-            self.temp = tempfile.TemporaryDirectory()
-            os.chdir(self.temp.name)
-        else:
-            os.chdir(self.directory)
-            
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        """
-        Switch back to the original directory (`self.parent`).
-        Delete the temporary directory if one was created.
-        """
-        os.chdir(self.current)	# switch back to the original directory
-        if hasattr(self, 'temp'):	# remove temporary directory
-            self.temp.cleanup()
+@contextmanager
+def cd(directory: Path = None) -> None:
+    previous = os.getcwd()
+    cm = TemporaryDirectory() if directory is None else nullcontext(directory)
+    with cm as directory:
+        os.chdir(directory)
+        try:
+            yield Context(previous=previous, current=directory)
+        finally:
+            os.chdir(previous)
         
 
 # base problem
 subdir = Path('some_subdirectory')
 subdir.mkdir(exist_ok=True)
-(subdir/'my_file.txt').write_text('hello world!')
+(subdir/'my_file1.txt').write_text('hello world!')
 with cd(subdir):
-    print(Path('my_file.txt').read_text())
-    assert Path('my_file.txt').is_file() == True
-assert Path('my_file.txt').is_file() == False
+    print(Path('my_file1.txt').read_text())
+    assert Path('my_file1.txt').is_file() == True
+assert Path('my_file1.txt').is_file() == False
 
-# bonus 1
+# bonus 1, test calling `cd()` with no argument
 original = Path.cwd()
 print(original.resolve())
 with cd():
@@ -59,3 +44,7 @@ with cd():
     assert Path.cwd().resolve != original.resolve()
 assert Path.cwd().resolve() == original.resolve()
 
+# bonus 2, test `cd()` returns an object with `current` and `previous` attributes
+with cd() as dirs:
+    print('previous:', dirs.previous)
+    print('current:', dirs.current)
