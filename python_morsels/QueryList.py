@@ -100,4 +100,3 @@ assert query.filter(y__gt=0, y__ne=2, x__in=[0, 1]).attrs("name") == []
 assert query.filter(F.x == 2).attrs("name", 'y') ==\
     [('work', 2), ('store', -2), ('lake', 6)]
 assert query.filter(F.x > 0, F.y != 2).attrs("name") == ['store', 'lake']
-
