@@ -1,5 +1,5 @@
 # RandomNumber.py
-import random
+from random import randrange
 
 
 class RandomNumber:
@@ -10,7 +10,7 @@ class RandomNumber:
         self.args = args
         self.cache = cache
     
-    def __set_name__(self, obj, name):
+    def __set_name__(self, instance, name):
         self.name = name
     
     def __get__(self, obj, objtype=None):
@@ -20,11 +20,23 @@ class RandomNumber:
         number = randrange(*self.args)
         if self.cache:
             attributes[self.name] = number
-        return random.randrange(*self.args)
+        return randrange(*self.args)
     
-    def __set__(self, obj, value):
-        raise AttributeError(f'Cannot set attribute {self.name!r}')
+    #def __set__(self, obj, value):
+        #raise AttributeError(f'Cannot set attribute {self.name!r}')
 
+
+class RandomNumber:
+    def __init__(self, *args, cache=False):
+        self.args = args
+        self.cache = cache
+    def __get__(self, instance, cls=None):
+        number = randrange(*self.args)
+        if self.cache:
+            setattr(instance, self.name, number)
+        return number
+    def __set_name__(self, instance, name):
+        self.name = name
 
 # base problem
 class MagicPoint:
