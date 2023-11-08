@@ -10,8 +10,13 @@ from math import pi
 @dataclass
 class Circle:
     """ A class representing a circle."""
-    radius: float
-    _default_radius: float = 1.0
+    _radius: float = field(default=1.0)
+    
+    def __post_init__(self):
+        self.radius = self._radius
+        
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.radius})"
     
     @property
     def radius(self):
@@ -19,12 +24,10 @@ class Circle:
     
     @radius.setter
     def radius(self, value: float):
-        if isinstance(value, property):
-            self._radius = self._default_radius
-        elif value > 0:
-            self._radius = value
-        else:
+        if value < 0:
             raise ValueError('Radius cannot be negative')
+        else:
+            self._radius = value
     
     @property
     def diameter(self) -> float:
@@ -34,16 +37,9 @@ class Circle:
     def area(self) -> float:
         return (self.radius ** 2) * pi
     
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.radius})"
-    
     @diameter.setter
     def diameter(self, value):
         self.radius = value / 2
-    
-    @area.setter
-    def area(self, value):
-        raise AttributeError("can't set attribute")
     
 
 # base problem
