@@ -2,47 +2,60 @@
 """
 A script defining `Grouper` class that accepts an iterable and a key function.
 """
-from rich import print
 from typing import *
 
-T = TypeVar('T')
-K = TypeVar('K')
 
+class Grouper(MutableMapping):
+    """A dictionary-like class that groups items."""
+    
+    def __init__(self, iterable: Iterable = (), *, key: Callable = None):
+        self.groups = {}
+        self.keyfunc = key
+        self.update(iterable)
 
-class Grouper(Mapping[K, list[T]]):
-    
-    def __init__(self, iterable: Iterable[T] = None, key: Callable = None) -> None:
-        self.key = keyfunc = key
-        self.mapping = dct = {}
-        if isinstance(iterable, Mapping):
-            dct.update(iterable)
-        elif not iterable:
-            pass
-        else:
-            for item in iterable:
-                dct.setdefault(keyfunc(item), [])
-                dct[keyfunc(item)].append(item)
-    
-    def __getitem__(self, key: K) -> list[T]:
-        """ Required by `Mapping`"""
-        return self.mapping[key]
-    
-    def __iter__(self) -> Iterator[T]:
-        """ Required by `Mapping`"""
-        yield from self.mapping
-        
     def __len__(self) -> int:
-        """ Required by `Mapping`"""
-        return len(self.mapping.keys())
+        return sum(1 for _ in self.groups)
+
+    def __iter__(self) -> Iterator[Hashable]:
+        yield from self.groups
+
+    def __getitem__(self, key: Hashable) -> Any:
+        return self.groups[key]
     
-    def update(self, items: Iterable) -> None:
-        if isinstance(items, Mapping):
-            for key, value in items.items():
-                self.mapping.setdefault(key, []).extend(value)
+    def __setitem__(self, key: Hashable, value: Any):
+        self.groups[key] = value
+    
+    def __delitem__(self, key: Hashable) -> None:
+        del self.groups[key]
+    
+    def update(self, mapping: Mapping) -> None:
+        if isinstance(mapping, Mapping):
+            for value in mapping.values():
+                key = self.keyfunc(value[0])
+                self.groups.setdefault(key, []).extend(value)
         else:
-            for item in items:
-                self.mapping.setdefault(self.key(item), []).append(item)
-        
+            for item in mapping:
+                key = self.keyfunc(item)
+                self.groups.setdefault(key, []).append(item)
+    
+    def add(self, item) -> None:
+        key = self.keyfunc(item)
+        self.groups.setdefault(key, []).append(item)
+    
+    def group_for(self, item) -> Hashable:
+        return self.keyfunc(item)
+    
+    def __add__(self, other: 'Grouper') -> 'Grouper':
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        elif self.keyfunc != other.keyfunc:
+            raise ValueError(
+                "The Grouper objects do not have the same key function"
+            )
+        else:
+            added = Grouper(self, key=self.keyfunc)
+            added.update(other.groups)
+            return added
 
 
 # base problem
@@ -73,12 +86,6 @@ assert groups[6] == ['dreary', 'ponder']
 
 
 words = ["Apple", "animal", "apple", "ANIMAL", "animal"]
-word_groups = {
-    "apple": ["Apple", "apple", "APPLE", "APPLE"],
-    "animal": ["animal", "ANIMAL", "animal"],
-    "lemon": ["lemon", "Lemon", "lemon", "LEMON"],
-    "orange": ["Orange"],
-}
 more_items = {
     "apple": ["APPLE"],
     "lemon": ["lemon", "LEMON"],
@@ -87,4 +94,22 @@ more_items = {
 groups = Grouper(words, key=str.lower)
 groups.update(["lemon", "Lemon", "APPLE"])
 groups.update(more_items)
-assert dict(groups) == word_groups
+assert dict(groups) == {
+    "apple": ["Apple", "apple", "APPLE", "APPLE"],
+    "animal": ["animal", "ANIMAL", "animal"],
+    "lemon": ["lemon", "Lemon", "lemon", "LEMON"],
+    "orange": ["Orange"],
+}
+
+# bonus 2, test `add()` and `group_for()` methods
+groups = Grouper(key=len)
+groups.add('once')
+assert groups.group_for('upon') == 4
+assert groups.group_for('a') == 1
+assert groups[4] == ['once']
+
+# bonus 3, test that `Grouper` objects can be concactenated
+words1 = Grouper("You say goodbye and I say hello".split(), key=str.lower)
+words2 = Grouper("Hello hello".split(), key=str.lower)
+merged = words1 + words2
+assert merged['hello'] == ['hello', 'Hello', 'hello']
